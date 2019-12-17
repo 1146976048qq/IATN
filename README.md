@@ -8,8 +8,8 @@ The dataset has been uploaded, we will open source the model code as soon as pos
 ## Notes
 If our work is useful for you, please cite the paper:
 
-@article{zhang2019interactive,
-  title={Interactive Attention Transfer Network for Cross-domain Sentiment Classification},
-  author={Zhang, Kai and Zhang, Hefu and Liu, Qi and Zhao, Hongke and Zhu, Hengshu and Chen, Enhong},
-  year={2019}
+@article{zhang2019interactive,\
+  title={Interactive Attention Transfer Network for Cross-domain Sentiment Classification},\
+  author={Zhang, Kai and Zhang, Hefu and Liu, Qi and Zhao, Hongke and Zhu, Hengshu and Chen, Enhong},\
+  year={2019}\
 }
