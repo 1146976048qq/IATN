@@ -1,5 +1,5 @@
 # IATN
-Dataset and code for [Inateraction Attention Transfer Network for Cross-domain Sentiment Classification](https://www.aaai.org/ojs/index.php/AAAI/article/view/4524)
+Dataset and code for [Inateraction Attention Transfer Network for Cross-domain Sentiment Classification](http://staff.ustc.edu.cn/~cheneh/paper_pdf/2019/Kai-Zhang-AAAI.pdf)
 
 ## Amazon Review Dataset
 The dataset has been uploaded, we will release the model code as soon as possible.
