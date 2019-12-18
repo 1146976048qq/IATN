@@ -5,7 +5,7 @@ Dataset and code for Inateraction Attention Transfer Network for Cross-domain Se
 The dataset has been uploaded, we will open source the model code as soon as possible.
 
 # Crowdfunding project Dataset:[Indiegogo.com](https://www.indiegogo.com/)
-The dataset has been uploaded, we will open source the model code as soon as possible.
+This is our private dataset, if you need to use it, please indicate the source, thank you！
 
 ## Notes
 If our work is useful for you, please cite the paper:
