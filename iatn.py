@@ -1,7 +1,7 @@
 import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Bidirectional
-from attention import AttLayer
+# from attention import AttLayer
 
 class IATN(tf.keras.Model):
 
