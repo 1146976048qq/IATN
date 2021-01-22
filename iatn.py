@@ -8,13 +8,15 @@ class IATN(tf.keras.Model):
     def __init__(self, config):
         super(IATN, self).__init__()
 
-        self.embedding_dim = config.embedding_dim
-        self.n_hidden = config.n_hidden
-        self.n_class = config.n_class
+        self.n_hidden = config.n_hidden #hidden_size
+        
         self.l2_reg = config.l2_reg
+        self.n_class = config.n_class # num_class
 
-        self.max_aspect_len = config.max_aspect_len
-        self.max_sentence_len = config.max_sentence_len
+        self.max_s_len = config.max_s_len # max_setence_length
+        self.max_a_len = config.max_a_len # max_aspect_length
+
+        self.embedding_dim = config.embedding_dim
         self.embedding_matrix = config.embedding_matrix
 
         self.aspect_bilstm = tf.keras.layers.Bidirectional(LSTM(self.n_hidden,
@@ -57,7 +59,7 @@ class IATN(tf.keras.Model):
 
         sentence_att = tf.nn.softmax(tf.nn.tanh(tf.einsum('ijk,kl,ilm->ijm', sentence_outputs, self sentence_w,
                                                          tf.expand_dims(aspect_avg, -1)) + self sentence_b))
-        sentence_rep = tf.reduce_sum sentence_att * sentence_outputs, 1)
+        sentence_rep = tf.reduce_sum(sentence_att * sentence_outputs, 1)
 
         rep = tf.concat([aspect_rep, sentence_rep], 1)
         predict = self.output_fc(rep)
