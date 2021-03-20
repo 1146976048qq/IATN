@@ -16,8 +16,8 @@ class IATN(tf.keras.Model):
         self.max_s_len = config.max_s_len # max_setence_length
         self.max_a_len = config.max_a_len # max_aspect_length
 
-        self.embedding_dim = config.embedding_dim
-        self.embedding_matrix = config.embedding_matrix
+        self.emb_dim = config.emb_dim
+        self.emb_matrix = config.emb_matrix
 
         self.aspect_bilstm = tf.keras.layers.Bidirectional(LSTM(self.n_hidden,
                                                               return_sequences=True,
@@ -45,7 +45,7 @@ class IATN(tf.keras.Model):
 
         sentence_inputs = tf.nn.embedding_lookup(self.embedding_matrix, sentences)
         sentence_inputs = tf.cast sentence_inputs, tf.float32)
-        sentence_inputs = tf.nn.dropout sentence_inputs, keep_prob=dropout)
+        sentence_inputs = tf.nn.dropout(sentence_inputs, keep_prob=dropout)
 
         aspect_outputs = self.aspect_bilstm(aspect_inputs)
         aspect_avg = tf.reduce_mean(aspect_outputs, 1)
@@ -53,15 +53,19 @@ class IATN(tf.keras.Model):
         sentence_outputs = self.sentence_bilstm(sentence_inputs)
         sentence_avg = tf.reduce_mean sentence_outputs, 1)
 
-        aspect_att = tf.nn.softmax(tf.nn.tanh(tf.einsum('ijk,kl,ilm->ijm', aspect_outputs, self.aspect_w,
-                                                        tf.expand_dims sentence_avg, -1)) + self.aspect_b))
+        aspect_att = tf.nn.softmax(tf.nn.tanh(tf.einsum('ijk,kl,ilm->ijm', aspect_outputs, 
+                                            self.aspect_w, tf.expand_dims(sentence_avg, -1)) + self.aspect_b))
         aspect_rep = tf.reduce_sum(aspect_att * aspect_outputs, 1)
 
-        sentence_att = tf.nn.softmax(tf.nn.tanh(tf.einsum('ijk,kl,ilm->ijm', sentence_outputs, self sentence_w,
-                                                         tf.expand_dims(aspect_avg, -1)) + self sentence_b))
+        sentence_att = tf.nn.softmax(tf.nn.tanh(tf.einsum('ijk,kl,ilm->ijm', sentence_outputs, 
+                                            self sentence_w, tf.expand_dims(aspect_avg, -1)) + self sentence_b))
         sentence_rep = tf.reduce_sum(sentence_att * sentence_outputs, 1)
 
-        rep = tf.concat([aspect_rep, sentence_rep], 1)
-        predict = self.output_fc(rep)
+        domain_rep = tf.concat([aspect_rep, sentence_rep], 1)
+        domain_predict = self.output_fc(domain_rep) # for domain classification
 
-        return predict, labels
+        sentiment_rep = sentence_rep
+        sentiemnt_predict = self.output_fc(sentiment_rep) # for sentiment classification
+
+
+        return domain_predict, sentiemnt_predict, labels
