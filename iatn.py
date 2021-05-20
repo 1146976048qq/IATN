@@ -19,15 +19,8 @@ class IATN(tf.keras.Model):
         self.emb_dim = config.emb_dim
         self.emb_matrix = config.emb_matrix
 
-        self.aspect_bilstm = tf.keras.layers.Bidirectional(LSTM(self.n_hidden,
-                                                              return_sequences=True,
-                                                              recurrent_initializer='glorot_uniform',
-                                                              stateful=True))
-        self.sentence_bilstm = tf.keras.layers.Bidirectional(LSTM(self.n_hidden,
-                                                               return_sequences=True,
-                                                               recurrent_activation='sigmoid',
-                                                               recurrent_initializer='glorot_uniform',
-                                                               stateful=True))
+        self.aspect_bilstm = tf.keras.layers.Bidirectional(LSTM(self.n_hidden, return_sequences=True, recurrent_initializer='glorot_uniform', stateful=True))
+        self.sentence_bilstm = tf.keras.layers.Bidirectional(LSTM(self.n_hidden, return_sequences=True, recurrent_activation='sigmoid', recurrent_initializer='glorot_uniform', stateful=True))
 
         self.aspect_w = tf.contrib.eager.Variable(tf.random_normal([self.n_hidden, self.n_hidden]), name='aspect_w')
         self.aspect_b = tf.contrib.eager.Variable(tf.zeros([self.n_hidden]), name='aspect_b')
@@ -38,7 +31,7 @@ class IATN(tf.keras.Model):
         self.output_fc = tf.keras.layers.Dense(self.n_class, kernel_regularizer=tf.keras.regularizers.l2(l=self.l2_reg))
 
     def call(self, data, dropout=0.5):
-        aspects, sentences, labels, aspect_lens, sentence_lens = data
+        aspects, sentences, domain_labels, sentiment_labels, aspect_lens, sentence_lens = data
         aspect_inputs = tf.nn.embedding_lookup(self.embedding_matrix, aspects)
         aspect_inputs = tf.cast(aspect_inputs, tf.float32)
         aspect_inputs = tf.nn.dropout(aspect_inputs, keep_prob=dropout)
@@ -68,4 +61,4 @@ class IATN(tf.keras.Model):
         sentiemnt_predict = self.output_fc(sentiment_rep) # for sentiment classification
 
 
-        return domain_predict, sentiemnt_predict, labels
+        return domain_predict, sentiemnt_predict, domain_labels, sentiment_labels

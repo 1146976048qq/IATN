@@ -9,9 +9,6 @@ from sklearn.metrics import f1_score
 nlp = spacy.load("en")
 
 def evaluate(pred, gold):
-    """
-    evaluate accuracy and macro-F1 of ABSA task
-    """
     pred_count = np.zeros(3, dtype='int32')
     gold_count = np.zeros(3, dtype='int32')
     hit_count = np.zeros(3, dtype='int32')
@@ -48,21 +45,21 @@ def evaluate(pred, gold):
     return acc, macro_f, result_string, error_cases
 
 
-def read_data(word2id, max_aspect_len, max_context_len, dataset, pre_processed):
+def read_data(word2id, max_aspect_len, max_sentence_len, dataset, pre_processed):
     fname = dataset + '.txt'
     save_fname = dataset + '_data.txt'
 
-    aspects, contexts, labels, aspect_lens, context_lens = list(), list(), list(), list(), list()
+    aspects, sentence, labels, aspect_lens, sentence_lens = list(), list(), list(), list(), list()
     if pre_processed:
         if not os.path.isfile(save_fname):
             raise IOError(ENOENT, 'Not a file', save_fname)
         lines = open(save_fname, 'r').readlines()
         for i in range(0, len(lines), 5):
             aspects.append(ast.literal_eval(lines[i]))
-            contexts.append(ast.literal_eval(lines[i + 1]))
+            sentence.append(ast.literal_eval(lines[i + 1]))
             labels.append(ast.literal_eval(lines[i + 2]))
             aspect_lens.append(ast.literal_eval(lines[i + 3]))
-            context_lens.append(ast.literal_eval(lines[i + 4]))
+            sentence_lens.append(ast.literal_eval(lines[i + 4]))
     else:
         if not os.path.isfile(fname):
             raise IOError(ENOENT, 'Not a file', fname)
@@ -88,23 +85,21 @@ def read_data(word2id, max_aspect_len, max_context_len, dataset, pre_processed):
 
                 aspects.append(aspect + [0] * (max_aspect_len - len(aspect)))
                 f.write("%s\n" % aspects[-1])
-                contexts.append(context + [0] * (max_context_len - len(context)))
-                f.write("%s\n" % contexts[-1])
+                sentence.append(context + [0] * (max_sentence_len - len(context)))
+                f.write("%s\n" % sentence[-1])
                 if polarity == 'negative':
-                    labels.append([1, 0, 0])
-                elif polarity == 'neutral':
-                    labels.append([0, 1, 0])
-                elif polarity == 'positive':
-                    labels.append([0, 0, 1])
+                    labels.append([1, 0])
+                if polarity == 'positive':
+                    labels.append([0, 1])
                 f.write("%s\n" % labels[-1])
                 aspect_lens.append(len(aspect_sptoks))
                 f.write("%s\n" % aspect_lens[-1])
-                context_lens.append(len(context_sptoks) - 1)
-                f.write("%s\n" % context_lens[-1])
+                sentence_lens.append(len(context_sptoks) - 1)
+                f.write("%s\n" % sentence_lens[-1])
 
     print("Read %s examples from %s" % (len(aspects), fname))
-    return np.asarray(aspects), np.asarray(contexts), np.asarray(labels), np.asarray(aspect_lens), np.asarray(
-        context_lens)
+    return np.asarray(aspects), np.asarray(sentence), np.asarray(labels), np.asarray(aspect_lens), np.asarray(
+        sentence_lens)
 
 
 def load_word_embeddings(fname, embedding_dim, word2id):
@@ -129,7 +124,7 @@ def get_data_info(dataset, pre_processed):
     test_fname = dataset + 'test.txt'
     save_fname = dataset + 'data_info.txt'
 
-    word2id, max_aspect_len, max_context_len = {}, 0, 0
+    word2id, max_aspect_len, max_sentence_len = {}, 0, 0
     word2id['<pad>'] = 0
     if pre_processed:
         if not os.path.isfile(save_fname):
@@ -139,7 +134,7 @@ def get_data_info(dataset, pre_processed):
                 content = line.rstrip().split(' ')
                 if len(content) == 3:
                     max_aspect_len = int(content[1])
-                    max_context_len = int(content[2])
+                    max_sentence_len = int(content[2])
                 else:
                     word2id[content[0]] = int(content[1])
     else:
@@ -154,8 +149,8 @@ def get_data_info(dataset, pre_processed):
         for i in range(0, len(lines), 3):
             sptoks = nlp(lines[i].strip())
             words.extend([sp.text.lower() for sp in sptoks])
-            if len(sptoks) - 1 > max_context_len:
-                max_context_len = len(sptoks) - 1
+            if len(sptoks) - 1 > max_sentence_len:
+                max_sentence_len = len(sptoks) - 1
             sptoks = nlp(lines[i + 1].strip())
             if len(sptoks) > max_aspect_len:
                 max_aspect_len = len(sptoks)
@@ -165,8 +160,8 @@ def get_data_info(dataset, pre_processed):
         for i in range(0, len(lines), 3):
             sptoks = nlp(lines[i].strip())
             words.extend([sp.text.lower() for sp in sptoks])
-            if len(sptoks) - 1 > max_context_len:
-                max_context_len = len(sptoks) - 1
+            if len(sptoks) - 1 > max_sentence_len:
+                max_sentence_len = len(sptoks) - 1
             sptoks = nlp(lines[i + 1].strip())
             if len(sptoks) > max_aspect_len:
                 max_aspect_len = len(sptoks)
@@ -180,10 +175,10 @@ def get_data_info(dataset, pre_processed):
                 word2id[word] = len(word2id)
 
         with open(save_fname, 'w') as f:
-            f.write('length %s %s\n' % (max_aspect_len, max_context_len))
+            f.write('length %s %s\n' % (max_aspect_len, max_sentence_len))
             for key, value in word2id.items():
                 f.write('%s %s\n' % (key, value))
 
     print('There are %s words in the dataset, the max length of aspect is %s, and the max length of context is %s' % (
-    len(word2id), max_aspect_len, max_context_len))
-    return word2id, max_aspect_len, max_context_len
+    len(word2id), max_aspect_len, max_sentence_len))
+    return word2id, max_aspect_len, max_sentence_len

@@ -1,13 +1,12 @@
 import tensorflow as tf
-from utils import get_data_info, read_data, load_word_embeddings
-from model import IATN
+from utils import evaluate, get_data_info, read_data, load_word_embeddings
+from iatn import IATN
 from evals import *
 import os
 import time
 import math
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '4'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3'
 
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.5
@@ -54,10 +53,6 @@ def run(model, train_data, test_data):
     	cost, domain_predict_list, domain_label_list, sentiemnt_predict_list, sentiment_labels_list = 0., [], [], [], []
     	iterator.make_initializer(train_data)
 
-
-        # for sentiment classification
-        # for sentiment classification
-        # for sentiment classification
     	for _ in range(math.floor(train_data_size / batch_size)):
     		data = iterator.get_next()
     		with tf.GradientTape() as tape:
@@ -65,28 +60,55 @@ def run(model, train_data, test_data):
 
     			sentiemnt_loss_t = tf.nn.softmax_cross_entropy_with_logits_v2(
     									logits = sentiemnt_predict, sentiment_labels = sentiment_labels)
+                domain_loss_t = tf.nn.softmax_cross_entropy_with_logits_v2(
+    									logits = domain_predict, domain_labels = domain_labels)
+
     			sentiment_loss = tf.reduce_mean(sentiemnt_loss_t)
+                domain_loss = tf.reduce_mean(domain_loss_t)
+
                 sentiment_cost += tf.reduce_sum(sentiemnt_loss_t)
-            sentiment_grads = tape.gradient(sentiment_loss, model.variables)
-            optimizer.apply_gradients(zip(sentiment_grads, model.variables))
-            domain_predict_list.extend(tf.argmax(tf.nn.softmax(sentiemnt_predict), 1).numpy())
-            domain_labels_list.extend(tf.argmax(sentiment_labels, 1).numpy())
+                domain_cost += tf.reduce_sum(domain_loss_t)
+
+                loss_value = sentiment_loss + domain_loss
+
+            gradients = tape.gradient(loss_value, model.variables)
+            optimizer.apply_gradients(zip(gradients, model.variables))
+
+            sentiemnt_predict_list.extend(tf.argmax(tf.nn.softmax(sentiemnt_predict), 1).numpy())
+            sentiemnt_labels_list.extend(tf.argmax(sentiment_labels, 1).numpy())
+
+            domain_predict_list.extend(tf.argmax(tf.nn.softmax(domain_predict), 1).numpy())
+            domain_labels_list.extend(tf.argmax(domain_labels, 1).numpy())
 
         sentiment_train_acc, _, _ = evaluate(pred=sentiemnt_predict_list, gold=sentiment_labels_list)
-        sentiment_train_loss = csentiment_cost / train_data_size
-        tf.contrib.summary.scalar('sentiment_train_loss', sentiment_train_loss)
-        tf.contrib.summary.scalar('sentiment_train_acc', sentiment_train_acc)
+        sentiment_train_loss = sentiment_loss / train_data_size
+        domain_train_acc, _, _ = evaluate(pred=domain_predict_list, gold=domain_labels_list)
+        domain_train_loss = domian_cost / train_data_size
+
+        train_loss = (sentiment_cost+domain_cost) / train_data_size
+
+def main(_):
+    start_time = time.time()
+
+    print('Loading data info ...')
+    word2id, FLAGS.max_aspect_len, FLAGS.max_context_len = get_data_info(dataset, pre_processed)
+
+    print('Loading training and testing data ...')
+    train_data = read_data(word2id, FLAGS.max_aspect_len, FLAGS.max_context_len, dataset + 'train', pre_processed)
+    test_data = read_data(word2id, FLAGS.max_aspect_len, FLAGS.max_context_len, dataset + 'test', pre_processed)
+
+    print('Loading pre-trained word vectors ...')
+    FLAGS.embedding_matrix = load_word_embeddings(embedding_file_name, FLAGS.embedding_dim, word2id)
+
+    model = IATN(FLAGS)
+    run(model, train_data, test_data)
+
+    end_time = time.time()
+    print('Time Costing: %s' % (end_time - start_time))
 
 
-        # for domain classification
-        # for domain classification
-        # for domain classification
-        for _ in range(math.floor(train_data_size / batch_size)):
-
-
-
-
-
+if __name__ == '__main__':
+    tf.app.run()
 
 
 
