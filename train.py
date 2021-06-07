@@ -91,11 +91,11 @@ def main(_):
     start_time = time.time()
 
     print('Loading data info ...')
-    word2id, FLAGS.max_aspect_len, FLAGS.max_context_len = get_data_info(dataset, pre_processed)
+    word2id, FLAGS.max_aspect_len, FLAGS.max_sentence_len = get_data_info(dataset, pre_processed)
 
     print('Loading training and testing data ...')
-    train_data = read_data(word2id, FLAGS.max_aspect_len, FLAGS.max_context_len, dataset + 'train', pre_processed)
-    test_data = read_data(word2id, FLAGS.max_aspect_len, FLAGS.max_context_len, dataset + 'test', pre_processed)
+    train_data = read_data(word2id, FLAGS.max_aspect_len, FLAGS.max_sentence_len, dataset + 'train', pre_processed)
+    test_data = read_data(word2id, FLAGS.max_aspect_len, FLAGS.max_sentence_len, dataset + 'test', pre_processed)
 
     print('Loading pre-trained word vectors ...')
     FLAGS.embedding_matrix = load_word_embeddings(embedding_file_name, FLAGS.embedding_dim, word2id)

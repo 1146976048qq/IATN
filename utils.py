@@ -71,11 +71,11 @@ def read_data(word2id, max_aspect_len, max_sentence_len, dataset, pre_processed)
                 if polarity == 'conflict':
                     continue
 
-                context_sptoks = nlp(lines[i].strip())
-                context = []
-                for sptok in context_sptoks:
+                sentence_sptoks = nlp(lines[i].strip())
+                sentence = []
+                for sptok in sentence_sptoks:
                     if sptok.text.lower() in word2id:
-                        context.append(word2id[sptok.text.lower()])
+                        sentence.append(word2id[sptok.text.lower()])
 
                 aspect_sptoks = nlp(lines[i + 1].strip())
                 aspect = []
@@ -85,7 +85,7 @@ def read_data(word2id, max_aspect_len, max_sentence_len, dataset, pre_processed)
 
                 aspects.append(aspect + [0] * (max_aspect_len - len(aspect)))
                 f.write("%s\n" % aspects[-1])
-                sentence.append(context + [0] * (max_sentence_len - len(context)))
+                sentence.append(sentence + [0] * (max_sentence_len - len(sentence)))
                 f.write("%s\n" % sentence[-1])
                 if polarity == 'negative':
                     labels.append([1, 0])
@@ -94,7 +94,7 @@ def read_data(word2id, max_aspect_len, max_sentence_len, dataset, pre_processed)
                 f.write("%s\n" % labels[-1])
                 aspect_lens.append(len(aspect_sptoks))
                 f.write("%s\n" % aspect_lens[-1])
-                sentence_lens.append(len(context_sptoks) - 1)
+                sentence_lens.append(len(sentence_sptoks) - 1)
                 f.write("%s\n" % sentence_lens[-1])
 
     print("Read %s examples from %s" % (len(aspects), fname))
@@ -179,6 +179,6 @@ def get_data_info(dataset, pre_processed):
             for key, value in word2id.items():
                 f.write('%s %s\n' % (key, value))
 
-    print('There are %s words in the dataset, the max length of aspect is %s, and the max length of context is %s' % (
+    print('There are %s words in the dataset, the max length of aspect is %s, and the max length of sentence is %s' % (
     len(word2id), max_aspect_len, max_sentence_len))
     return word2id, max_aspect_len, max_sentence_len

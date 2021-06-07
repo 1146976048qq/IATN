@@ -1,0 +1,12 @@
+#requirments
+
+os
+sys
+math
+time
+pandas
+logging
+random
+datetime
+keras-gpu
+
