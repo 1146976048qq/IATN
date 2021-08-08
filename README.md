@@ -57,7 +57,7 @@ This is our private dataset, if you want to use it, please indicate the source, 
 
 ### Contact
 
-If you have any problem about this library, please create an Issue or send us an Email at:
+If you have any problem about this library, please send us an Email at:
 
 — [kkzhang0808@gmail.com](kkzhang0808@gmail.com)
 
